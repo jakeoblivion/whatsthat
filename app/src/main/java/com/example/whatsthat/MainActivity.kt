@@ -1,31 +1,39 @@
 package com.example.whatsthat
 
+import android.app.Activity
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity;
+import android.os.Environment
+import android.provider.MediaStore
+import android.support.v4.content.FileProvider
+import android.support.v7.app.AlertDialog
+import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-
+import android.widget.ImageView
+import android.widget.TextView
+import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
-import android.content.Intent
-import android.support.v7.app.AlertDialog
+import java.io.File
+import java.io.IOException
 
 
 class MainActivity : AppCompatActivity() {
-    private val PICK_IMAGE = 1
+    private val GALLERY_IMAGE_REQUEST = 1
     private val CAMERA_IMAGE_REQUEST = 2
+    private val TAG = MainActivity::class.java.simpleName
+    private val FILE_NAME = "temp.jpg"
+
+    private var mobileMainImage: ImageView? = null
+    private var mobileMainImageDetails: TextView? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
-
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
-
-        val imageCapture = Intent("android.media.action.IMAGE_CAPTURE")
-
-        val imageGallery = Intent()
-        imageGallery.type = "image/*"
-        imageGallery.action = Intent.ACTION_GET_CONTENT
 
         fab.setOnClickListener {
             val builder = AlertDialog.Builder(this@MainActivity)
@@ -33,21 +41,97 @@ class MainActivity : AppCompatActivity() {
                 .setMessage(R.string.dialog_select_prompt)
                 //CAMERA
                 .setNegativeButton(R.string.dialog_select_camera) { _, _ ->
-                    startActivityForResult(imageCapture, CAMERA_IMAGE_REQUEST)
+                    startCamera()
                 }
                 //GALLERY
                 .setPositiveButton(R.string.dialog_select_gallery) { _, _ ->
-                    startActivityForResult(
-                        Intent.createChooser(
-                            imageGallery,
-                            "Select Picture"
-                        ), PICK_IMAGE
-                    )
+                    startImageGallery()
                 }
             builder.create().show()
         }
+
+        mobileMainImageDetails = findViewById(R.id.mainImageDetails)
+        mobileMainImage = findViewById(R.id.mainImage)
     }
 
+    private fun startImageGallery() {
+        val imageGallery = Intent()
+        imageGallery.type = "image/*"
+        imageGallery.action = Intent.ACTION_GET_CONTENT
+        startActivityForResult(
+            Intent.createChooser(
+                imageGallery,
+                "Select Picture"
+            ), GALLERY_IMAGE_REQUEST
+        )
+    }
+
+    private fun startCamera() {
+        val imageCapture = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        val photoUri =
+                FileProvider.getUriForFile(this, applicationContext.packageName + ".provider", getCameraFile())
+            imageCapture.putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
+            startActivityForResult(imageCapture, CAMERA_IMAGE_REQUEST)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == GALLERY_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data != null) {
+            uploadImage(data.data)
+        } else if (requestCode == CAMERA_IMAGE_REQUEST && resultCode == Activity.RESULT_OK) {
+            val photoUri: Uri =
+                FileProvider.getUriForFile(this, applicationContext.packageName + ".provider", getCameraFile())
+            uploadImage(photoUri)
+        }
+    }
+
+    private fun getCameraFile(): File {
+        val dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        return File(dir, FILE_NAME)
+    }
+
+    private fun uploadImage(uri: Uri?) {
+        if (uri != null) {
+            try {
+                val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, uri)
+
+                //callCloudVision(bitmap)
+                callCloudVision()
+                mobileMainImage?.setImageBitmap(bitmap)
+
+            } catch (e: IOException) {
+                Log.d(TAG, "Image picking failed because " + e.message)
+                Toast.makeText(this, R.string.image_picker_error, Toast.LENGTH_LONG).show()
+            }
+
+        } else {
+            Log.d(TAG, "Image picker gave us a null image.")
+            Toast.makeText(this, R.string.image_picker_error, Toast.LENGTH_LONG).show()
+        }
+    }
+
+
+    private fun callCloudVision() {
+        mobileMainImageDetails?.setText(R.string.loading_message)
+
+    }
+//    private fun callCloudVision(bitmap: Bitmap) {
+//         mobileImageDetails?.setText(R.string.loading_message)
+//
+//        // Switch text to loading
+//
+//        // Do the real work in an async task, because we need to use the network anyway
+//        try {
+//            val labelDetectionTask = LableDetectionTask(this, prepareAnnotationRequest(bitmap))
+//            labelDetectionTask.execute()
+//        } catch (e: IOException) {
+//            Log.d(TAG, "failed to make API request because of other IOException " + e.message)
+//        }
+//
+//    }
+
+    /////////////////////// OLD
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_main, menu)
