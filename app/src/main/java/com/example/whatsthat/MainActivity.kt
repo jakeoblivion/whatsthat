@@ -19,7 +19,6 @@ import kotlinx.android.synthetic.main.activity_main.*
 import java.io.File
 import java.io.IOException
 
-
 class MainActivity : AppCompatActivity() {
     private val GALLERY_IMAGE_REQUEST = 1
     private val CAMERA_IMAGE_REQUEST = 2
@@ -28,7 +27,6 @@ class MainActivity : AppCompatActivity() {
 
     private var mobileMainImage: ImageView? = null
     private var mobileMainImageDetails: TextView? = null
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,8 +48,8 @@ class MainActivity : AppCompatActivity() {
             builder.create().show()
         }
 
-        mobileMainImageDetails = findViewById(R.id.mainImageDetails)
         mobileMainImage = findViewById(R.id.mainImage)
+        mobileMainImageDetails = findViewById(R.id.mainImageDetails)
     }
 
     private fun startImageGallery() {
@@ -69,9 +67,9 @@ class MainActivity : AppCompatActivity() {
     private fun startCamera() {
         val imageCapture = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         val photoUri =
-                FileProvider.getUriForFile(this, applicationContext.packageName + ".provider", getCameraFile())
-            imageCapture.putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
-            startActivityForResult(imageCapture, CAMERA_IMAGE_REQUEST)
+            FileProvider.getUriForFile(this, applicationContext.packageName + ".provider", getCameraFile())
+        imageCapture.putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
+        startActivityForResult(imageCapture, CAMERA_IMAGE_REQUEST)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -95,10 +93,10 @@ class MainActivity : AppCompatActivity() {
         if (uri != null) {
             try {
                 val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, uri)
-
-                //callCloudVision(bitmap)
-                callCloudVision()
+                mobileMainImageDetails?.setText(R.string.loading_message)
                 mobileMainImage?.setImageBitmap(bitmap)
+                val cloudVision = CloudVision()
+                cloudVision.makeApiCall(bitmap)
 
             } catch (e: IOException) {
                 Log.d(TAG, "Image picking failed because " + e.message)
@@ -111,27 +109,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
-    private fun callCloudVision() {
-        mobileMainImageDetails?.setText(R.string.loading_message)
-
-    }
-//    private fun callCloudVision(bitmap: Bitmap) {
-//         mobileImageDetails?.setText(R.string.loading_message)
-//
-//        // Switch text to loading
-//
-//        // Do the real work in an async task, because we need to use the network anyway
-//        try {
-//            val labelDetectionTask = LableDetectionTask(this, prepareAnnotationRequest(bitmap))
-//            labelDetectionTask.execute()
-//        } catch (e: IOException) {
-//            Log.d(TAG, "failed to make API request because of other IOException " + e.message)
-//        }
-//
-//    }
-
-    /////////////////////// OLD
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_main, menu)
