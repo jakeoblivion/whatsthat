@@ -95,7 +95,7 @@ class MainActivity : AppCompatActivity() {
                 val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, uri)
                 mobileMainImageDetails?.setText(R.string.loading_message)
                 mobileMainImage?.setImageBitmap(bitmap)
-                val cloudVision = CloudVision()
+                val cloudVision = CloudVision(mobileMainImageDetails)
                 cloudVision.makeApiCall(bitmap)
 
             } catch (e: IOException) {
