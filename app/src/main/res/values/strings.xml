@@ -6,4 +6,6 @@
     <string name="dialog_select_gallery">Gallery</string>
     <string name="image_picker_error">Unable to select the image</string>
     <string name="loading_message">Uploading image. Please wait…</string>
+    <string name="is_a_hotdog">This is a hot dog</string>
+    <string name="is_not_a_hotdog">This is not a hot dog</string>
 </resources>

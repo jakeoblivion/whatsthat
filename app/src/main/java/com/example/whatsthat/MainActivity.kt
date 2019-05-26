@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.support.v4.content.ContextCompat
 import android.support.v4.content.FileProvider
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
@@ -94,8 +95,12 @@ class MainActivity : AppCompatActivity() {
             try {
                 val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, uri)
                 mobileMainImageDetails?.setText(R.string.loading_message)
+                mobileMainImageDetails?.setTextColor(ContextCompat.getColor(this, R.color.colorGrey))
+                mobileMainImageDetails?.setBackgroundColor(ContextCompat.getColor(this, R.color.colorWhite))
+                mobileMainImageDetails?.textSize = 18F
+
                 mobileMainImage?.setImageBitmap(bitmap)
-                val cloudVision = CloudVision(mobileMainImageDetails)
+                val cloudVision = CloudVision(mobileMainImageDetails, this)
                 cloudVision.makeApiCall(bitmap)
 
             } catch (e: IOException) {

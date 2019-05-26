@@ -1,6 +1,8 @@
 package com.example.whatsthat
 
+import android.content.Context
 import android.graphics.Bitmap
+import android.support.v4.content.ContextCompat
 import android.util.Log
 import android.widget.TextView
 
@@ -15,7 +17,7 @@ import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
 import java.io.ByteArrayOutputStream
 
-class CloudVision(val textView: TextView?) {
+class CloudVision(val textView: TextView?, val context: Context) {
     private val CLOUD_VISION_API_KEY = BuildConfig.CLOUD_VISION_API_KEY
     private val TAG = MainActivity::class.java.simpleName
 
@@ -55,7 +57,17 @@ class CloudVision(val textView: TextView?) {
                 val response = annotateRequest.execute()
                 val responseString = convertResponseToString(response)
                 uiThread {
-                    textView?.text = responseString
+                    if (isAHotDog(responseString)) {
+                        textView?.text = context.getResources().getString(R.string.is_a_hotdog)
+                        textView?.textSize = 36F
+                        textView?.setTextColor(ContextCompat.getColor(context, R.color.colorWhite))
+                        textView?.setBackgroundColor(ContextCompat.getColor(context, R.color.colorGreen))
+                    } else {
+                        textView?.text = context.getResources().getString(R.string.is_not_a_hotdog)
+                        textView?.textSize = 36F
+                        textView?.setTextColor(ContextCompat.getColor(context, R.color.colorWhite))
+                        textView?.setBackgroundColor(ContextCompat.getColor(context, R.color.colorRed))
+                    }
                 }
             } catch (e: GoogleJsonResponseException) {
                 Log.d(TAG, "failed to make API request because " + e.content)
@@ -65,6 +77,11 @@ class CloudVision(val textView: TextView?) {
         }
     }
 
+    private fun isAHotDog(resultsString: String): Boolean {
+        println(resultsString)
+        if(resultsString.contains("Hot dog")) return true
+        return false
+    }
 
     private fun getImageEncodeImage(bitmap: Bitmap): Image {
         val base64EncodedImage = Image()
